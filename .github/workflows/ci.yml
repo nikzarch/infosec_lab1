@@ -1,76 +1,74 @@
-  name: infosec lab1
+name: infosec lab1
 
-  on:
-    push:
-      branches: [main, master]
-    pull_request:
-    workflow_dispatch:
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
 
-  permissions:
-    contents: read
+permissions:
+  contents: read
 
-  jobs:
-    build-and-sast:
-      name: Build and SpotBugs
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
+jobs:
+  build-and-sast:
+    name: Build, tests and SpotBugs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-        - name: Set up Java
-          uses: actions/setup-java@v4
-          with:
-            distribution: temurin
-            java-version: '21'
-            cache: maven
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
 
-        - name: Build and run tests
-          run: mvn --batch-mode --no-transfer-progress clean verify
+      - name: Build and run tests
+        run: mvn --batch-mode --no-transfer-progress clean verify
 
-        - name: Upload SpotBugs report
-          if: always()
-          uses: actions/upload-artifact@v4
-          with:
-            name: spotbugs-report
-            path: '**/spotbugsXml.xml'
-            if-no-files-found: ignore
+      - name: Upload build and SpotBugs reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-and-spotbugs-reports
+          path: |
+            **/target/spotbugs*.xml
+            **/target/surefire-reports/**
+            **/target/failsafe-reports/**
+          if-no-files-found: ignore
 
-    dependency-check:
-      name: OWASP Dependency-Check
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
+  snyk-sca:
+    name: Snyk dependency vulnerability scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-        - name: Set up Java
-          uses: actions/setup-java@v4
-          with:
-            distribution: temurin
-            java-version: '21'
-            cache: maven
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
 
-        - name: Cache Dependency-Check data
-          uses: actions/cache@v4
-          with:
-            path: ~/.m2/repository/org/owasp/dependency-check-data
-            key: dependency-check-data-${{ runner.os }}-${{ github.ref_name }}
-            restore-keys: |
-              dependency-check-data-${{ runner.os }}-
+      - name: Set up Snyk CLI
+        uses: snyk/actions/setup@master
+        with:
+          snyk-version: latest
 
-        - name: Run OWASP Dependency-Check
-          run: >
-            mvn --batch-mode --no-transfer-progress
-            org.owasp:dependency-check-maven:check
-            -DfailBuildOnCVSS=7
-            -DskipTestScope=false
-            -Dformats=HTML,JSON
+      - name: Run Snyk test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          mkdir -p target
+          snyk test --all-projects --severity-threshold=high \
+            --json-file-output=target/snyk-report.json
 
-        - name: Upload Dependency-Check report
-          if: always()
-          uses: actions/upload-artifact@v4
-          with:
-            name: dependency-check-report
-            path: |
-              target/dependency-check-report.html
-              target/dependency-check-report.json
-            if-no-files-found: ignore
+      - name: Upload Snyk report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-sca-report
+          path: target/snyk-report.json
+          if-no-files-found: ignore
