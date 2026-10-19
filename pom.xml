@@ -20,8 +20,11 @@
         <java.version>21</java.version>
         <jjwt.version>0.13.0</jjwt.version>
         <spotbugs-maven-plugin.version>4.10.5.0</spotbugs-maven-plugin.version>
+        <tomcat.version>11.0.26</tomcat.version>
         <dependency-check-maven.version>13.0.0</dependency-check-maven.version>
+        <jackson-2-bom.version>2.22.3</jackson-2-bom.version>
     </properties>
+
 
     <dependencies>
         <dependency>
