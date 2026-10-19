@@ -21,7 +21,7 @@
           uses: actions/setup-java@v4
           with:
             distribution: temurin
-            java-version: '17'
+            java-version: '21'
             cache: maven
 
         - name: Build and run tests
@@ -46,7 +46,7 @@
           uses: actions/setup-java@v4
           with:
             distribution: temurin
-            java-version: '17'
+            java-version: '21'
             cache: maven
 
         - name: Cache Dependency-Check data
