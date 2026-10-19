@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: secure-java-api
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/secure_api}
+    username: ${SPRING_DATASOURCE_USERNAME:secure_api}
+    password: ${SPRING_DATASOURCE_PASSWORD:local_db_password_change_me}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+
+app:
+  jwt:
+    secret-base64: ${JWT_SECRET:arrrrrrrrrrrrrrrrrrrrrrrrrrrararararaarararaararrarar}
+    expiration-seconds: ${JWT_EXPIRATION_SECONDS:900}
